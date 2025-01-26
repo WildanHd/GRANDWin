@@ -1,6 +1,6 @@
 ## The improvement of gain calibration solution of the MWA ultra-low frequency observation data using winsorized statistics
 
-This repository used for documenting all of the python code for the research. 
+This repository used for documenting all of the python code for the research. It is still under development.
 
 #### Abstract
 
