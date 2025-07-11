@@ -52,7 +52,7 @@ def import_data(obs_list, data_directory, data_type):
         all_data = []
 
         for i in range(len(obs_list)):
-            f = fits.open(data_directory + "hyperdrive_solutions_%s_noise.fits" %(obs_list[i]))
+            f = fits.open(data_directory + "hyperdrive_solutions_%s.fits" %(obs_list[i]))
 
             data = f['SOLUTIONS'].data[:, :, :, ::2]
 
@@ -64,7 +64,7 @@ def import_data(obs_list, data_directory, data_type):
         all_data = []
 
         for i in range(len(obs_list)):
-            f = fits.open(data_directory + "hyperdrive_solutions_%s_noise.fits" %(obs_list[i]))
+            f = fits.open(data_directory + "hyperdrive_solutions_%s.fits" %(obs_list[i]))
 
             data = f['SOLUTIONS'].data[:, :, :, 1::2]
 
@@ -76,7 +76,7 @@ def import_data(obs_list, data_directory, data_type):
         all_data = []
 
         for i in range(len(obs_list)):
-            f = fits.open(data_directory + "hyperdrive_solutions_%s_noise.fits" %(obs_list[i]))
+            f = fits.open(data_directory + "hyperdrive_solutions_%s.fits" %(obs_list[i]))
 
             data = np.abs(f['SOLUTIONS'].data[:, :, :, ::2] + f["SOLUTIONS"].data[:, :, :, 1::2] * 1j)
 
@@ -88,7 +88,7 @@ def import_data(obs_list, data_directory, data_type):
         all_data = []
 
         for i in range(len(obs_list)):
-            f = fits.open(data_directory + "hyperdrive_solutions_%s_noise.fits" %(obs_list[i]))
+            f = fits.open(data_directory + "hyperdrive_solutions_%s.fits" %(obs_list[i]))
 
             data = np.rad2deg(np.angle(f['SOLUTIONS'].data[:, :, :, ::2] + f["SOLUTIONS"].data[:, :, :, 1::2] * 1j))
 
