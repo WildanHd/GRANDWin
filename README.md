@@ -1,9 +1,68 @@
-## The improvement of gain calibration solution of the MWA ultra-low frequency observation data using winsorized statistics
+# GRANDWin 🛰️  
+**Gain-based RFI Analysis using Normalized Deviation with Winsorization**
 
-This repository used for documenting all of the python code for the research. It is still under development.
+GRANDWin is an outlier detection and flagging algorithm designed for radio interferometric data, based on winsorization statistics. It is developed as part of an academic research project to improve the calibration quality by identifying and flagging radio frequency interference (RFI) contaminated antenna gain solutions.
 
-#### Abstract
+## 📘 Background
 
-The hyperfine structure of the 21 cm line from neutral hydrogen, observed at redshifts between 13 and 17 (frequency range of 75–100 MHz), provides insight into the evolution of neutral hydrogen during the transition from X-ray heating to reionization. However, these observations are impacted by foreground contaminants and radio frequency interference (RFI), which degrade the performance of calibration software.
-In this study, we employed the newly developed calibration software, Hyperdrive, for the Murchison Widefield Array (MWA) data to explore a novel approach to RFI contamination detection in gain calibration solutions. Using a point-source-like RFI model, we determined that the real component of the gain calibration solution, with a winsorized z-score below $-5\sigma$, is the most effective RFI identifier. Furthermore, with the implementation of the observation data, these outlier locations were subsequently flagged in the raw visibility data across all baselines, supplementing AOFlagger's existing flags. This method resulted in an additional $\sim0.92\%$ of flagged data.
-Following recalibration of the updated dataset, we observed a $4.6\%$ reduction in the standard deviation ($\sigma$) of the gain calibration solutions, with the mean value remaining unchanged. Furthermore, the 2D power spectrum at $k_{||} > 0.2$ exhibited significant improvement, with undesired excess power reduced by approximately $\sim13.76\%$, and the power spectrum variance decreased by $\sim36.14\%$. Similar improvements were noted in the 1D power spectrum, where the before/after ratio at $k_{||} > 0.2$ was $1.45 \pm 0.14$, demonstrating the effectiveness of winsorizing as an additional RFI detection strategy.
+In radio astronomy, gain calibration is critical for extracting accurate radio signals. However, outliers in the gain solutions—caused by RFI, instrumental errors, or bad observations—can degrade image quality and skew results.
+
+**GRANDWin** applies a robust statistical method using **winsorization** to detect outliers in gain solutions across frequency, time, and antennas. It then enables **automated flagging** of contaminated data directly in the UVFITS visibility files.
+
+---
+
+## 🔁 Workflow Overview
+
+The GRANDWin pipeline consists of the following steps:
+
+1. **Input Parsing**  
+   - Reads a CSV file containing observation IDs, observation dates, and pointing centers.
+   
+2. **Gain Data Access**  
+   - Loads gain calibration solutions stored in FITS or HDF5 files for each observation.
+
+3. **Outlier Detection**  
+   - Applies a winsorized Z-score method to detect statistically abnormal values in the gain data.
+   - Outputs a list of outliers with metadata: observation ID, antenna ID, frequency channel, and time step.
+
+4. **Flagging**  
+   - Applies flags to the original UVFITS visibility data using the detected outliers. The condition: if we find one contaminated antenna then we will flag all of baselines related to the antenna
+   - Saves the modified UVFITS file with flags applied.
+
+---
+
+## 📂 Repository Structure
+
+```text
+GRANDWin/
+├── data/                           # Input and output data files
+│   └── raw/                        # Original CSV, FITS, HDF5, UVFITS files
+        ├── calibration_solutions
+        └── uvfits_raw
+│   └── processed/                  # Output flagged files and reports
+        ├── detected_outliers
+        └── uvfits_update
+│
+├── grandwin/                       # Main package code
+│   ├── winsorize_detector.py                # Core winsorized outlier detection logic
+│   ├── flagger.py                  # UVFITS flagging based on outliers
+│   ├── metadata_parser.py          # Extracts obs info from CSV
+│   ├── config.py                   # Global settings and thresholds
+│   ├── utils.py                    # Logging and helper functions
+│   └── io/                         # I/O handling modules
+│       ├── base_reader.py
+│       ├── fits_reader.py
+│       ├── h5_reader.py
+│       ├── uvfits_reader.py
+│       └── file_reader_factory.py
+│
+├── notebooks/                      # Jupyter notebooks for testing
+├── scripts/                        # CLI scripts to run the pipeline
+│   ├── detect_outliers.py
+│   └── flag_outliers.py
+│
+├── tests/                          # Unit tests for each module
+├── requirements.txt                # Python dependencies
+├── setup.py                        # Install as a package (optional)
+├── README.md                       # Project documentation
+└── LICENSE                         # License info (e.g., MIT)
