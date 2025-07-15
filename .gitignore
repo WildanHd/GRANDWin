@@ -1,0 +1,36 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and runtime files
+*.log
+
+# Data files (raw or processed)
+*.fits
+*.h5
+*.uvfits
+*.npy
+*.csv
+
+# Output files
+*.out
+*.bak
+*.tmp
+
+# Environment files
+.env
+.venv/
+*.egg-info/
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
