@@ -15,6 +15,7 @@ __pycache__/
 *.uvfits
 *.npy
 *.csv
+*.parquet
 
 # Output files
 *.out
