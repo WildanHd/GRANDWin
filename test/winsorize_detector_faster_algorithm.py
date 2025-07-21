@@ -142,12 +142,25 @@ def winsorizing_vectorizer(data, gamma, threshold):
     ])
 
     ## Winsorize the original reshaped data
-    data_wins = np.clip(data_reshape, low_vals, high_vals)
+    #data_wins = np.clip(data_reshape, low_vals, high_vals)
+    data_wins = data_reshape.copy()
+    mask_low = data_reshape < low_vals
+    mask_high = data_reshape > high_vals
+
+    # Reshape low/high_vals for broadcasting
+    low_vals_reshaped = low_vals.reshape(1, -1)
+    high_vals_reshaped = high_vals.reshape(1, -1)
+
+    # Vectorized winsorization
+    data_wins = data_reshape.copy()
+    data_wins = np.where(data_reshape < low_vals_reshaped, low_vals_reshaped, data_wins)
+    data_wins = np.where(data_reshape > high_vals_reshaped, high_vals_reshaped, data_wins)
+
 
     ## Calculate winsorized mean and std
     win_mean = data_wins.mean(axis=0)
     win_std = data_wins.std(axis=0)
-
+    
     ## Compute z-scores and reshape back
     win_z_scores = (data_reshape - win_mean) / win_std
     win_z_scores = win_z_scores.reshape(time, antennas, frequencies, polarizations)
@@ -264,7 +277,7 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
 
     ## Select the best gamma value
     ### Generate outlier counts based on set of gamma values
-    gamma_test = np.linspace(0.0, 0.5, int(iter))
+    gamma_test = np.linspace(0.0, 0.202, int(iter))
 
     time, antennas, frequencies, polarizations = data.shape
 
@@ -280,17 +293,39 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     final_gamma = np.empty(n_series)
 
     for s in range(n_series):
-        counts = combined_outlier_flat[:, s] 
-        
-        # Find the most frequently occurring count value
-        vals, freqs = np.unique(counts, return_counts=True)
-        most_common_val = vals[np.argmax(freqs)]
-        
-        # Get indices where this value occurs
-        match_indices = np.where(counts == most_common_val)[0]
-        
-        # Pick the first occurrence (you can change this logic to pick k-th if needed)
-        final_gamma[s] = gamma_test[match_indices[-1]]
+        counts = combined_outlier_flat[:, s]
+        gamma_list = gamma_test
+
+        # Step 1: Build gamma ↔ outlier count DataFrame
+        df = pd.DataFrame({"gamma": gamma_list, "outlier_count": counts})
+
+        # Step 2: Find the most common outlier count
+        count_freq = df["outlier_count"].value_counts()
+        most_common_count = count_freq.index[0]
+
+        # Step 3: Filter all gammas with that common count
+        df_filtered = df[df["outlier_count"] == most_common_count].reset_index(drop=True)
+
+        # Step 4: Find the first change point
+        change_indices = [i for i in range(1, len(df_filtered)) if df_filtered["outlier_count"][i] != df_filtered["outlier_count"][i - 1]]
+
+        # Step 5: Pick final gamma
+        if change_indices:
+            selected_gamma = df_filtered["gamma"].iloc[change_indices[0] - 1]
+        else:
+            selected_gamma = df_filtered["gamma"].iloc[-1]
+
+        # Step 6: Optional correction if gamma > 0.2 and plateau is wide
+        if selected_gamma > 0.2:
+            trace_back = df_filtered[df_filtered["gamma"] <= 0.2]
+            if not trace_back.empty:
+                selected_gamma = trace_back["gamma"].iloc[-1]
+            else:
+                selected_gamma = 0.1  # safe fallback
+
+        # Store result
+        final_gamma[s] = selected_gamma
+
 
     final_gamma = final_gamma.reshape(antennas, frequencies, polarizations)
 
