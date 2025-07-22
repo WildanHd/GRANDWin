@@ -29,14 +29,9 @@ def winsorizing_vectorizer(data, gamma, threshold):
     # Winsorizing the original dataset
     ## Flatten data for easier processing
     data_reshape = data.reshape(T, -1)
-    nan_mask_flat = np.isnan(data_reshape)
+    sorted_data = np.sort(data_reshape, axis=0)
 
-    # Prepare outputs
-    data_wins = np.full_like(data_reshape, np.nan)
-    win_z_scores = np.full_like(data_reshape, np.nan)
-    outlier_masks = np.zeros_like(data_reshape, dtype=bool)
-
-    # Handle gamma
+    ## Handle gamma: broadcast if scalar, flatten if array
     if np.isscalar(gamma):
         gamma_flat = np.full((N,), gamma)
     else:
@@ -44,41 +39,46 @@ def winsorizing_vectorizer(data, gamma, threshold):
             raise ValueError("gamma must be scalar or have shape (antennas, frequencies, polarizations)")
         gamma_flat = gamma.reshape(-1)
 
-    # Main loop for winsorizing
-    for i in range(N):
-        col = data_reshape[:, i]
-        mask = nan_mask_flat[:, i]
-        valid_data = col[~mask]
+    ## Compute the number of data that should be winsorize per column depends on the gamma
+    k_vals = np.floor(gamma_flat / 2 * T).astype(int)
 
-        if valid_data.size == 0:
-            continue
+    ## Calculate low and high winsorization values per column
+    low_vals = np.array([
+        sorted_data[k, i] if k < T else sorted_data[0, i]
+        for i, k in enumerate(k_vals)
+    ])
+    high_vals = np.array([
+        sorted_data[-k-1, i] if k < T else sorted_data[-1, i]
+        for i, k in enumerate(k_vals)
+    ])
 
-        sorted_col = np.sort(valid_data)
-        k = int(np.floor(gamma_flat[i] * len(valid_data) / 2))
+    ## Winsorize the original reshaped data
+    #data_wins = np.clip(data_reshape, low_vals, high_vals)
+    data_wins = data_reshape.copy()
+    mask_low = data_reshape < low_vals
+    mask_high = data_reshape > high_vals
 
-        low = sorted_col[k] if k < len(valid_data) else sorted_col[0]
-        high = sorted_col[-k - 1] if k < len(valid_data) else sorted_col[-1]
+    # Reshape low/high_vals for broadcasting
+    low_vals_reshaped = low_vals.reshape(1, -1)
+    high_vals_reshaped = high_vals.reshape(1, -1)
 
-        # Winsorize valid data
-        wins_data = np.clip(valid_data, low, high)
-        mu = np.mean(wins_data)
-        sigma = np.std(wins_data)
-        if sigma == 0:
-            sigma = 1e-6
+    # Vectorized winsorization
+    data_wins = data_reshape.copy()
+    data_wins = np.where(data_reshape < low_vals_reshaped, low_vals_reshaped, data_wins)
+    data_wins = np.where(data_reshape > high_vals_reshaped, high_vals_reshaped, data_wins)
 
-        # Store winsorized values and z-scores
-        full_col = col.copy()
-        full_col[~mask] = wins_data
-        data_wins[:, i] = full_col
 
-        z_col = (valid_data - mu) / sigma
-        win_z_scores[~mask, i] = z_col
-        outlier_masks[~mask, i] = (z_col > threshold) | (z_col < -threshold)
-
-    # Reshape back
-    data_wins = data_wins.reshape(time, antennas, frequencies, polarizations)
+    ## Calculate winsorized mean and std
+    win_mean = data_wins.mean(axis=0)
+    win_std = data_wins.std(axis=0)
+    
+    ## Compute z-scores and reshape back
+    win_z_scores = (data_reshape - win_mean) / win_std
     win_z_scores = win_z_scores.reshape(time, antennas, frequencies, polarizations)
-    outlier_masks = outlier_masks.reshape(time, antennas, frequencies, polarizations)
+
+    # Count the number of outliers for each antennas, frequencies, and polarizations
+    ## Identify outliers and count
+    outlier_masks = (win_z_scores > threshold) | (win_z_scores < -threshold)
     outlier_counts = np.sum(outlier_masks, axis=0)
 
     return data_wins, win_z_scores, outlier_masks, outlier_counts
@@ -94,6 +94,8 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     print("Import data ...", flush=True)
 
     data = import_data(obs_list, data_directory, data_type)
+
+    print("... data: ", data)
 
     ## Select the best gamma value
     ### Generate outlier counts based on set of gamma values

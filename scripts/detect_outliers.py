@@ -42,6 +42,9 @@ if __name__ == "__main__":
     final_threshold = args.finalthresh
     gamma = args.gamma
 
+    print(f"... data directory: {data_directory}")
+    print(f"... results directory: {results_directory}")
+
     print("Generate task list!")
 
     task_list = observation_id_preparation(observation_file)
