@@ -8,7 +8,10 @@ def import_data(obs_list, data_directory, data_type):
     all_data = []
 
     for obs_id in obs_list:
-        f = fits.open(f"{data_directory}hyperdrive_solutions_{obs_id}_noise.fits")
+
+        print(f"... {obs_id}", flush=True)
+
+        f = fits.open(f"{data_directory}hyperdrive_solutions_{obs_id}.fits")
 
         if data_type == 'real':
             data = f['SOLUTIONS'].data[:, :, :, ::2]

@@ -84,17 +84,20 @@ def winsorizing_vectorizer(data, gamma, threshold):
     return data_wins, win_z_scores, outlier_masks, outlier_counts
 
 
-def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold):
+def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma):
 
-    print("Check all parameters: ", obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold)
+    print("Check all parameters: ", obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma, flush=True)
 
     # Running winsorizing
     ## Import raw data
+
+    print("Import data ...", flush=True)
+
     data = import_data(obs_list, data_directory, data_type)
 
     ## Select the best gamma value
     ### Generate outlier counts based on set of gamma values
-    gamma_test = np.linspace(0.0, 0.202, int(iter))
+    gamma_test = np.linspace(0.0, gamma, int(iter))
 
     time, antennas, frequencies, polarizations = data.shape
 
@@ -103,6 +106,8 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     for i in range(len(gamma_test)):
         _, _, _, outlier_counts = winsorizing_vectorizer(data, gamma_test[i], int(iter_threshold))
         combined_outlier_counts[i] = outlier_counts
+
+    print("Select final gamma value ...", flush=True)
 
     ### Final gamma selection
     combined_outlier_flat = combined_outlier_counts.reshape(int(iter), -1)
@@ -150,12 +155,15 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     index_time_blocks = np.tile(np.arange(time/len(obs_list)), len(obs_list))
     index_obs_id = np.repeat(obs_list, time/len(obs_list))
 
+    print("Winsorizing with final gamma ...", flush=True)
+
     ## Winsorizing with final gamma value
     data_wins, win_z_scores, outliers_mask, outlier_counts = winsorizing_vectorizer(data, final_gamma, int(final_threshold))
 
     ## Generate some data results
     df_stats, df_outlier_counts, _ = export_data(obs_list, data, data_wins, outliers_mask, outlier_counts)
 
+    print("Save output ...", flush=True)
 
     # Save data
     ## Final gamma
@@ -164,25 +172,25 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     df_final_gamma.to_parquet(results_directory+"final_gamma_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
 
     ## Outliers statistics
-    print("Saving the outlier statistics data ...")
+    print("... Saving the outlier statistics data", flush=True)
     df_stats.to_parquet(results_directory+"outlier_statistics_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
     
     ## Outliers count
-    print("Saving the outliers counts data ...")
+    print("... Saving the outliers counts data", flush=True)
     df_outlier_counts.to_parquet(results_directory+"outlier_counts_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
 
     ## Outliers location
-    print("Saving the outliers location data ...")
+    print("... Saving the outliers location data", flush=True)
     with h5py.File(results_directory+"outliers_location_day_%s_grid_%s_integration_%s_%s.h5" %(obs_day, grid, integration_time, data_type), "w") as f:
         f.create_dataset("outliers_mask", data=outliers_mask)
         f.create_dataset("obs_id", data=index_obs_id)
         f.create_dataset("time_blocks", data=index_time_blocks)
 
     ## Winsorize z score
-    print("Saving the winsorize z score data ...")
+    print("... Saving the winsorize z score data", flush=True)
     with h5py.File(results_directory+"win_z_scores_data_day_%s_grid_%s_integration_%s_%s.h5" %(obs_day, grid, integration_time, data_type), "w") as f:
         f.create_dataset("wins_z_score", data=win_z_scores)
         f.create_dataset("obs_id", data=index_obs_id)
         f.create_dataset("time_blocks", data=index_time_blocks)
     
-    return print("All results files has been generated!")
+    return print("All results files has been generated!", flush=True)
