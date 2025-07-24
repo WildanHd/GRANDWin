@@ -30,17 +30,17 @@ def export_data(obs_list, data, data_wins, outlier_masks, outlier_counts):
 
     # Create the data statistical properties
     ## Calculate original data statistical properties
-    ori_mean = data.mean(axis=0)
-    ori_std = data.std(axis=0)
-    ori_max = data.max(axis=0)
-    ori_min = data.min(axis=0)
-    ori_skew = stats.skew(data, axis=0)
+    ori_mean = np.nanmean(data, axis=0)
+    ori_std = np.nanstd(data, axis=0)
+    ori_max = np.nanmax(data, axis=0)
+    ori_min = np.nanmin(data, axis=0)
+    ori_skew = stats.skew(data, axis=0, nan_policy="omit")
 
     ## Calculate winsorized mean and std
     data_wins = data_wins.reshape(time, antennas, frequencies, polarizations)
-    win_mean = data_wins.mean(axis=0)
-    win_std = data_wins.std(axis=0)
-    win_skew = stats.skew(data_wins, axis=0)
+    win_mean = np.nanmean(data_wins, axis=0)
+    win_std = np.nanstd(data_wins, axis=0)
+    win_skew = stats.skew(data_wins, axis=0, nan_policy="omit")
 
     print(ori_mean.shape, ori_std.shape, ori_max.shape, ori_min.shape, ori_skew.shape, win_mean.shape, win_std.shape, win_skew.shape)
 

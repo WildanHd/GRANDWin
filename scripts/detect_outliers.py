@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process observation data in parallel.")
     parser.add_argument("-d", "--data_directory", required=True, help="Directory containing hyperdrive calibration solutions")
     parser.add_argument("-r", "--results_directory", required=True, help="Directory to store the calculation results")
-    parser.add_argument("-o", "--obs_file", required=True, help="Directory containing the observation id file")
+    parser.add_argument("-oi", "--obs_file", required=True, help="Directory containing the observation id file")
     parser.add_argument("-it", "--integration_time", type=int, required=True, help="Integration time per each timeblock second ex. 2, 8")
     parser.add_argument("-t", "--type", required=True, help="The data type that consist of amplitude, phase, real and imaginary part")
     parser.add_argument("-ir", "--iter", required=True, help="Number of iteration to find final gamma value ex. 10, 100")
