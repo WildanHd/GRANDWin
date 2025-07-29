@@ -18,6 +18,7 @@ def flag_uvfits_data(obs_id, uvfits_path, df_outliers, output_path, win_step, uv
     print("... Data shape before: ", uv[0].data.data.shape, flush=True)
     print("... Flags before: ", flagsb, flush=True)
     print("... Total data before: ", datatot)
+    print("df_outliers: ", df_outliers)
 
     _, unique_id = np.unique(uv[0].data['DATE'], return_inverse=True)
 
@@ -25,13 +26,13 @@ def flag_uvfits_data(obs_id, uvfits_path, df_outliers, output_path, win_step, uv
 
     for j in range(len(dtimeblocks)):
         dfreqs = np.unique(df_outliers[df_outliers['timeblock'] == dtimeblocks[j]]['frequency'])
-        print(dfreqs)
+        print("dfreqs: ", len(dfreqs), "\n", dfreqs)
 
         extimeblocks = expand_timeblocks(df_outliers[df_outliers['timeblock'] == dtimeblocks[j]]['timeblock'].unique(), win_step, uv_step)
-        print(extimeblocks)
+        print("timeblocks: ", extimeblocks)
 
         blindices = np.where(np.isin(unique_id, extimeblocks))[0]
-        print(blindices)
+        print("baselines: ", len(blindices), "\n", blindices)
 
         uv[0].data.data[np.ix_(blindices, [0], [0], dfreqs, [0,1,2,3], [2])] = np.abs(uv[0].data.data[np.ix_(blindices, [0], [0], dfreqs, [0,1,2,3], [2])]) * -1
 

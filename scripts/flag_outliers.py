@@ -44,7 +44,7 @@ if __name__ == "__main__":
         flag_uvfits_data(
             obs_id,
             uvfits_path,
-            df_outliers[df_outliers["obs_id"] == obs_id].reset_index(drop=True),
+            df_outliers[df_outliers["obs_id"] == int(obs_id)].reset_index(drop=True),
             output_path,
             args.win_integration,
             args.uvfits_integration,
