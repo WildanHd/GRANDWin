@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("-pol", "--polarization", nargs='*', default=['XX', 'YY'])
     parser.add_argument("-wi", "--win_integration", type=int, required=True)
     parser.add_argument("-ui", "--uvfits_integration", type=int, required=True)
+    parser.add_argument("-min", "--min_antenna", type=int, required=True)
 
     args = parser.parse_args()
 
@@ -39,12 +40,15 @@ if __name__ == "__main__":
         uvfits_path = os.path.join(args.data_dir, f"{obs_id}_w_no_flags059-078.uvfits")
         output_path = os.path.join(args.results_dir, f"{obs_id}_w_no_flags059-078_flagged.uvfits")
 
+        sel_df_outliers = df_outliers[df_outliers['obs_id'] == int(obs_id)]['frequency'].value_counts().to_frame().reset_index()
+        sel_df_outliers = sel_df_outliers[sel_df_outliers['count'] > args.min_antenna]['frequency'].to_list()
+
         print(f"Run flagging for {obs_id} ...")
 
         flag_uvfits_data(
             obs_id,
             uvfits_path,
-            df_outliers[df_outliers["obs_id"] == int(obs_id)].reset_index(drop=True),
+            df_outliers[(df_outliers["obs_id"] == int(obs_id)) & (df_outliers['frequency'].isin(sel_df_outliers))].reset_index(drop=True),
             output_path,
             args.win_integration,
             args.uvfits_integration,
