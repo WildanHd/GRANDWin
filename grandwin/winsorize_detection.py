@@ -7,7 +7,7 @@ from astropy.io import fits
 from grandwin.io.fits_reader import import_data
 from grandwin.io.detected_outliers_file_output import export_data
 
-def winsorizing_vectorizer(data, gamma, threshold):
+def winsorizing_vectorizer(data, gamma, threshold, state):
     """
     Winsorizes data along the time axis based on either a scalar or per-feature gamma.
 
@@ -21,6 +21,9 @@ def winsorizing_vectorizer(data, gamma, threshold):
     - outlier_masks: ndarray of shape (antennas, frequencies, polarizations) represent the outlier locations
     - outlier_counts: ndarray of shape (antennas, frequencies, polarizations) represent the number of outlier per location
     """
+
+    # Running condition
+    run_state = state
 
     time, antennas, frequencies, polarizations = data.shape
     T = time
@@ -73,7 +76,11 @@ def winsorizing_vectorizer(data, gamma, threshold):
 
         z_col = (valid_data - mu) / sigma
         win_z_scores[~mask, i] = z_col
-        outlier_masks[~mask, i] = (z_col > threshold) | (z_col < -threshold)
+
+        if run_state == 'initial':
+            outlier_masks[~mask, i] = (z_col > threshold) | (z_col < -threshold)
+        else:
+            outlier_masks[~mask, i] = (z_col < -threshold)
 
     # Reshape back
     data_wins = data_wins.reshape(time, antennas, frequencies, polarizations)
@@ -104,7 +111,7 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     combined_outlier_counts = np.empty((int(iter), antennas, frequencies, polarizations), dtype=int)
 
     for i in range(len(gamma_test)):
-        _, _, _, outlier_counts = winsorizing_vectorizer(data, gamma_test[i], int(iter_threshold))
+        _, _, _, outlier_counts = winsorizing_vectorizer(data, gamma_test[i], int(iter_threshold), 'initial')
         combined_outlier_counts[i] = outlier_counts
 
     print("Select final gamma value ...", flush=True)
@@ -158,7 +165,7 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     print("Winsorizing with final gamma ...", flush=True)
 
     ## Winsorizing with final gamma value
-    data_wins, win_z_scores, outliers_mask, outlier_counts = winsorizing_vectorizer(data, final_gamma, int(final_threshold))
+    data_wins, win_z_scores, outliers_mask, outlier_counts = winsorizing_vectorizer(data, final_gamma, int(final_threshold), 'final')
 
     ## Generate some data results
     df_stats, df_outlier_counts, _ = export_data(obs_list, data, data_wins, outliers_mask, outlier_counts)

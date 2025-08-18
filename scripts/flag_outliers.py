@@ -42,13 +42,14 @@ if __name__ == "__main__":
 
         sel_df_outliers = df_outliers[df_outliers['obs_id'] == int(obs_id)]['frequency'].value_counts().to_frame().reset_index()
         sel_df_outliers = sel_df_outliers[sel_df_outliers['count'] > args.min_antenna]['frequency'].to_list()
+        df_outliers_sel = df_outliers[(df_outliers["obs_id"] == int(obs_id)) & (df_outliers['frequency'].isin(sel_df_outliers))].reset_index(drop=True)
 
         print(f"Run flagging for {obs_id} ...")
 
         flag_uvfits_data(
             obs_id,
             uvfits_path,
-            df_outliers[(df_outliers["obs_id"] == int(obs_id)) & (df_outliers['frequency'].isin(sel_df_outliers))].reset_index(drop=True),
+            df_outliers_sel,
             output_path,
             args.win_integration,
             args.uvfits_integration,
