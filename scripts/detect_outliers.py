@@ -26,6 +26,8 @@ if __name__ == "__main__":
     parser.add_argument("-ito", "--iterthresh", required=True, help="Iteration threshold", default=3.0)
     parser.add_argument("-fto", "--finalthresh", required=True, help="Final threshold used for outliers detection", default=5.0)
     parser.add_argument("-g", "--gamma", type=float, default=0.02)
+    parser.add_argument("-p", "--day_partition", type=int, default=1)
+    parser.add_argument("-gp", "--grid_point", type=int, default=0)
 
     args = parser.parse_args()
 
@@ -41,13 +43,15 @@ if __name__ == "__main__":
     iter_threshold = args.iterthresh 
     final_threshold = args.finalthresh
     gamma = args.gamma
+    partition = args.day_partition
+    grid_point = args.grid_point
 
     print(f"... data directory: {data_directory}")
     print(f"... results directory: {results_directory}")
 
     print("Generate task list!")
 
-    task_list = observation_id_preparation(observation_file)
+    task_list = observation_id_preparation(observation_file, partition, grid_point)
 
     print("Task list: ", task_list)
 
@@ -55,6 +59,6 @@ if __name__ == "__main__":
 
     # Run multiprocessing
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(winsorizing_outlier_detection_3d, [(obs_days, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma) for obs_days, grid, obs_list in task_list])
+        results = pool.starmap(winsorizing_outlier_detection_3d, [(obs_days, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma, partition, grid_point) for obs_days, grid, obs_list in task_list])
 
     print("Detection completed!", flush=True)

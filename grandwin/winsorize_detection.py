@@ -91,7 +91,7 @@ def winsorizing_vectorizer(data, gamma, threshold, state):
     return data_wins, win_z_scores, outlier_masks, outlier_counts
 
 
-def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma):
+def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma, partition, grid_point):
 
     print("Check all parameters: ", obs_day, grid, obs_list, data_directory, results_directory, integration_time, data_type, iter, iter_threshold, final_threshold, gamma, flush=True)
 
@@ -176,26 +176,26 @@ def winsorizing_outlier_detection_3d(obs_day, grid, obs_list, data_directory, re
     ## Final gamma
     index = pd.MultiIndex.from_product([range(antennas), range(frequencies), range(polarizations)], names=["antenna", "frequency", "polarization"])
     df_final_gamma = pd.DataFrame({"final_gamma": final_gamma.flatten()}, index=index).reset_index()
-    df_final_gamma.to_parquet(results_directory+"final_gamma_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
+    df_final_gamma.to_parquet(results_directory+"final_gamma_day_%s_grid_%s_integration_%s_%s_part_%s_gp_%s.parquet" %(obs_day, grid, integration_time, data_type, partition, grid_point), engine="pyarrow", compression="snappy")
 
     ## Outliers statistics
     print("... Saving the outlier statistics data", flush=True)
-    df_stats.to_parquet(results_directory+"outlier_statistics_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
+    df_stats.to_parquet(results_directory+"outlier_statistics_day_%s_grid_%s_integration_%s_%s_part_%s_gp_%s.parquet" %(obs_day, grid, integration_time, data_type, partition, grid_point), engine="pyarrow", compression="snappy")
     
     ## Outliers count
     print("... Saving the outliers counts data", flush=True)
-    df_outlier_counts.to_parquet(results_directory+"outlier_counts_day_%s_grid_%s_integration_%s_%s.parquet" %(obs_day, grid, integration_time, data_type), engine="pyarrow", compression="snappy")
+    df_outlier_counts.to_parquet(results_directory+"outlier_counts_day_%s_grid_%s_integration_%s_%s_part_%s_gp_%s.parquet" %(obs_day, grid, integration_time, data_type, partition, grid_point), engine="pyarrow", compression="snappy")
 
     ## Outliers location
     print("... Saving the outliers location data", flush=True)
-    with h5py.File(results_directory+"outliers_location_day_%s_grid_%s_integration_%s_%s.h5" %(obs_day, grid, integration_time, data_type), "w") as f:
+    with h5py.File(results_directory+"outliers_location_day_%s_grid_%s_integration_%s_%s_part_%s_gp_%s.h5" %(obs_day, grid, integration_time, data_type, partition, grid_point), "w") as f:
         f.create_dataset("outliers_mask", data=outliers_mask)
         f.create_dataset("obs_id", data=index_obs_id)
         f.create_dataset("time_blocks", data=index_time_blocks)
 
     ## Winsorize z score
     print("... Saving the winsorize z score data", flush=True)
-    with h5py.File(results_directory+"win_z_scores_data_day_%s_grid_%s_integration_%s_%s.h5" %(obs_day, grid, integration_time, data_type), "w") as f:
+    with h5py.File(results_directory+"win_z_scores_data_day_%s_grid_%s_integration_%s_%s_part_%s_gp_%s.h5" %(obs_day, grid, integration_time, data_type, partition, grid_point), "w") as f:
         f.create_dataset("wins_z_score", data=win_z_scores)
         f.create_dataset("obs_id", data=index_obs_id)
         f.create_dataset("time_blocks", data=index_time_blocks)

@@ -11,7 +11,7 @@ def import_data(obs_list, data_directory, data_type):
 
         print(f"... {obs_id}", flush=True)
 
-        f = fits.open(f"{data_directory}hyperdrive_solutions_{obs_id}.fits")
+        f = fits.open(f"{data_directory}hyperdrive_solutions_{obs_id}_noise.fits")
 
         if data_type == 'real':
             data = f['SOLUTIONS'].data[:, :, :, ::2]
