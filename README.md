@@ -29,6 +29,8 @@ The GRANDWin pipeline consists of the following steps:
    - Applies flags to the original UVFITS visibility data using the detected outliers. The condition: if we find one contaminated antenna then we will flag all of baselines related to the antenna
    - Saves the modified UVFITS file with flags applied.
 
+[![DOI](https://zenodo.org/badge/680141359.svg)](https://doi.org/10.5281/zenodo.18297420)
+
 ---
 
 ## 📂 Repository Structure
