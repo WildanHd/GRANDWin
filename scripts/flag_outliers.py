@@ -37,8 +37,11 @@ if __name__ == "__main__":
         unique_obs_ids = df_outliers["obs_id"].unique().tolist()
 
     for obs_id in unique_obs_ids:
-        uvfits_path = os.path.join(args.data_dir, f"{obs_id}_w_no_flags059-078.uvfits")
-        output_path = os.path.join(args.results_dir, f"{obs_id}_w_no_flags059-078_flagged.uvfits")
+        #uvfits_path = os.path.join(args.data_dir, f"{obs_id}_w_no_flags059-078.uvfits")
+        #output_path = os.path.join(args.results_dir, f"{obs_id}_w_no_flags059-078_flagged.uvfits")
+
+        uvfits_path = os.path.join(args.data_dir, f"{obs_id}_w_flags_corrections_time_edges059-078.uvfits")
+        output_path = os.path.join(args.results_dir, f"{obs_id}_w_flags_corrections_time_edges059-078_flagged.uvfits")
 
         sel_df_outliers = df_outliers[df_outliers['obs_id'] == int(obs_id)]['frequency'].value_counts().to_frame().reset_index()
         sel_df_outliers = sel_df_outliers[sel_df_outliers['count'] > args.min_antenna]['frequency'].to_list()
