@@ -27,6 +27,6 @@ def load_outliers_from_h5(file_path, polarizations):
     selected_polarizations = polarizations  
 
     # Filter rows where any of the selected columns is True
-    df_outliers = df_outliers[df_outliers[selected_polarizations].any(axis=1)].reset_index(drop=True)
+    df_outliers = df_outliers[df_outliers[selected_polarizations].all(axis=1)].reset_index(drop=True)
 
     return df_outliers
