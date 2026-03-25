@@ -49,7 +49,7 @@ def flag_uvfits_data(obs_id, uvfits_path, df_outliers, output_path, win_step, uv
     uv.close()
 
     g = str(obs_id) + ', ' + str(flagsb) + ', ' + str(flagsa) + ', ' + str(np.sum(total_flags)) + ', ' + str(datatot) + '\n'
-    fflagged = open(results_dir+f"{obs_id}.log", mode='a', newline='\n')
+    fflagged = open(results_dir+f"{obs_id}_flagging.log", mode='a', newline='\n')
     fflagged.write(g)
     fflagged.close()
     print("... Flagging finished!", flush=True)
