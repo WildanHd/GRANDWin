@@ -68,3 +68,8 @@ GRANDWin/
 ├── setup.py                        # Install as a package (optional)
 ├── README.md                       # Project documentation
 └── LICENSE                         # License info (e.g., MIT)
+
+## What's New in v2.0.0
+* **Major Update:** Implemented bias correction for the Winsorized statistics (Wilcox 2012).
+* **Optimized Parameters:** Default outlier detection is now configured for the phase component at a 2s solution interval with a threshold of $|z| > 10$.
+* **Performance:** Achieves >99.5% power reduction and a ~35 dB variance drop in MWA 75-100 MHz auto-power spectra.
